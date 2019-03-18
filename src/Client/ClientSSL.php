@@ -191,12 +191,25 @@ class ClientSSL extends Client
 
         // Call cURL to do it's stuff and return us the content
         $contents = curl_exec($curl);
+	    $curlerrno = curl_errno($curl);
+	    $curlerror = curl_error($curl);
         curl_close($curl);
 
         // Check for 200 Code in $contents
         if (!strstr($contents, '200 OK')) {
             //There was no "200 OK" returned - we failed
-            return $this->handleError(-32300, 'transport error - HTTP status code was not 200');
+
+	        if ( $curlerrno === 0 ){
+	        	$this->error = new IXR_Error(-32300, "Request failed - Ensure firewall outgoing port {$this->port} is opened" . (!filter_var($this->server, FILTER_VALIDATE_IP)?" and ensure domain '{$this->server}' can be resolved.":"."));
+	        	return false;
+	        }
+	        if ( $curlerrno === 7 ){
+	        	$this->error = new IXR_Error(-32300, "Request failed - HTTP status code {$curlerrno} - {$curlerror}.\nEnsure firewall outgoing port {$this->port} is opened.");
+	        	return false;
+	        }
+
+            $this->error = new IXR_Error(-32300, 'Request failed - HTTP status code '. $curlerrno . ' - ' . $curlerror);
+            return false;
         }
 
         if ($this->debug) {
