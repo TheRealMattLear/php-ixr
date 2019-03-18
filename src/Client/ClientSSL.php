@@ -200,16 +200,13 @@ class ClientSSL extends Client
             //There was no "200 OK" returned - we failed
 
 	        if ( $curlerrno === 0 ){
-	        	$this->error = new IXR_Error(-32300, "Request failed - Ensure firewall outgoing port {$this->port} is opened" . (!filter_var($this->server, FILTER_VALIDATE_IP)?" and ensure domain '{$this->server}' can be resolved.":"."));
-	        	return false;
+		        return $this->handleError(-32300, "Request failed - Ensure firewall outgoing port {$this->port} is opened" . (!filter_var($this->server, FILTER_VALIDATE_IP)?" and ensure domain '{$this->server}' can be resolved.":"."));
 	        }
 	        if ( $curlerrno === 7 ){
-	        	$this->error = new IXR_Error(-32300, "Request failed - HTTP status code {$curlerrno} - {$curlerror}.\nEnsure firewall outgoing port {$this->port} is opened.");
-	        	return false;
+		        return $this->handleError(-32300, "Request failed - HTTP status code {$curlerrno} - {$curlerror}.\nEnsure firewall outgoing port {$this->port} is opened.");
 	        }
 
-            $this->error = new IXR_Error(-32300, 'Request failed - HTTP status code '. $curlerrno . ' - ' . $curlerror);
-            return false;
+	        return $this->handleError(-32300, 'Request failed - HTTP status code '. $curlerrno . ' - ' . $curlerror);
         }
 
         if ($this->debug) {
